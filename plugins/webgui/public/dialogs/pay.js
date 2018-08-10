@@ -31,6 +31,7 @@ app.factory('payDialog' , [ '$mdDialog', '$interval', '$timeout', '$http', '$loc
       $http.post('/api/user/order/qrcode', {
         accountId: publicInfo.accountId,
         orderId: publicInfo.orderId,
+        aliUser: publicInfo.aliUser,
       }).then(success => {
         publicInfo.myOrderId = success.data.orderId;
         publicInfo.qrCode = success.data.qrCode;

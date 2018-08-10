@@ -2,36 +2,11 @@ const log4js = require('log4js');
 const logger = log4js.getLogger('alipay');
 const cron = appRequire('init/cron');
 const config = appRequire('services/config').all();
-const alipayf2f = require('alipay-ftof');
 const fs = require('fs');
 const ref = appRequire('plugins/webgui_ref/time');
 const orderPlugin = appRequire('plugins/webgui_order');
 const groupPlugin = appRequire('plugins/group');
 
-let alipay_f2f;
-if(config.plugins.alipay && config.plugins.alipay.use) {
-  try {
-    const privateKey = fs.readFileSync(config.plugins.alipay.merchantPrivateKey, 'utf8').toString();
-    config.plugins.alipay.merchantPrivateKey = privateKey
-    .replace(/-----BEGIN RSA PRIVATE KEY-----/, '')
-    .replace(/-----END RSA PRIVATE KEY-----/, '')
-    .replace(/\n/g, '');
-  } catch (err) {}
-  try {
-    const publicKey = fs.readFileSync(config.plugins.alipay.alipayPublicKey, 'utf8').toString();
-    config.plugins.alipay.alipayPublicKey = publicKey
-    .replace(/-----BEGIN PUBLIC KEY-----/, '')
-    .replace(/-----END PUBLIC KEY-----/, '')
-    .replace(/\n/g, '');
-  } catch (err) {}
-  alipay_f2f = new alipayf2f({
-    appid: config.plugins.alipay.appid,
-    notifyUrl: config.plugins.alipay.notifyUrl,
-    merchantPrivateKey: '-----BEGIN RSA PRIVATE KEY-----\n' + config.plugins.alipay.merchantPrivateKey + '\n-----END RSA PRIVATE KEY-----',
-    alipayPublicKey: '-----BEGIN PUBLIC KEY-----\n' + config.plugins.alipay.alipayPublicKey + '\n-----END PUBLIC KEY-----',
-    gatewayUrl: config.plugins.alipay.gatewayUrl,
-  });
-}
 
 const isTelegram = config.plugins.webgui_telegram && config.plugins.webgui_telegram.use;
 let telegram;
@@ -44,11 +19,12 @@ const account = appRequire('plugins/account/index');
 const moment = require('moment');
 const push = appRequire('plugins/webgui/server/push');
 
-const createOrder = async (user, account, orderId) => {
+const createOrder = async (user, account, orderId, aliUser) => {
   const oldOrder = await knex('alipay').where({
     user,
     account: account ? account : null,
-    orderType: orderId
+    orderType: orderId,
+    aliUser: aliUser
   }).where('expireTime', '>', Date.now() + 15 * 60 * 1000).where({
     status: 'CREATE',
   }).then(success => {
@@ -71,19 +47,17 @@ const createOrder = async (user, account, orderId) => {
   }
   const myOrderId = moment().format('YYYYMMDDHHmmss') + Math.random().toString().substr(2, 6);
   const time = 60;
-  const qrCode = await alipay_f2f.createQRPay({
-    tradeNo: myOrderId,
-    subject: orderInfo.name || 'ss续费',
-    totalAmount: +orderInfo.alipay,
-    body: orderInfo.name || 'ss续费',
-    timeExpress: 10,
-  });
+  const qrCode = {
+    out_trade_no: myOrderId,
+    qr_code: config.plugins.alipay.qr_code,
+  };
   await knex('alipay').insert({
     orderId: myOrderId,
     orderType: orderId,
     qrcode: qrCode.qr_code,
     amount: orderInfo.alipay + '',
     user,
+    aliUser: aliUser,
     account: account ? account : null,
     status: 'CREATE',
     createTime: Date.now(),
@@ -119,6 +93,7 @@ const sendSuccessMail = async userId => {
   await emailPlugin.sendMail(user.email, orderMail.title, orderMail.content);
 };
 
+/*
 cron.minute(async () => {
   logger.info('check alipay order');
   if(!alipay_f2f) { return; }
@@ -162,7 +137,7 @@ cron.minute(async () => {
     await scanOrder(order);
   }
 }, 1);
-
+*/
 const checkOrder = async (orderId) => {
   const order = await knex('alipay').select().where({
     orderId,
@@ -175,6 +150,7 @@ const checkOrder = async (orderId) => {
   return order.status;
 };
 
+/*
 const verifyCallback = (data) => {
   const signStatus = alipay_f2f.verifyCallback(data);
   if(signStatus) {
@@ -189,6 +165,7 @@ const verifyCallback = (data) => {
   }
   return signStatus;
 };
+*/
 
 const orderList = async (options = {}) => {
   const where = {};
@@ -315,14 +292,16 @@ const getCsvOrder = async (options = {}) => {
   return orders;
 };
 
+/*/
 cron.minute(() => {
   if(!alipay_f2f) { return; }
   knex('alipay').delete().where({ status: 'CREATE' }).whereBetween('createTime', [0, Date.now() - 1 * 24 * 3600 * 1000]).then();
 }, 50);
+*/
 
 exports.orderListAndPaging = orderListAndPaging;
 exports.orderList = orderList;
 exports.createOrder = createOrder;
 exports.checkOrder = checkOrder;
-exports.verifyCallback = verifyCallback;
+//exports.verifyCallback = verifyCallback;
 exports.getCsvOrder = getCsvOrder;

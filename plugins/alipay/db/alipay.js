@@ -10,6 +10,7 @@ const createTable = async () => {
     table.integer('orderType');
     table.string('amount');
     table.integer('user');
+    table.string('aliUser');
     table.integer('account');
     table.string('qrcode');
     table.string('status');

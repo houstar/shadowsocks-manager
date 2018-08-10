@@ -213,8 +213,11 @@ exports.createOrder = async (req, res) => {
     const userId = req.session.user;
     const accountId = req.body.accountId;
     const orderId = req.body.orderId;
+    const aliUser = req.body.aliUser;
 
-    const alipayOrder = await alipay.createOrder(userId, accountId, orderId);
+    console.log(req.body);
+
+    const alipayOrder = await alipay.createOrder(userId, accountId, orderId, aliUser);
     return res.send(alipayOrder);
     // let type;
     // let amount;
