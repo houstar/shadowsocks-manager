@@ -215,36 +215,22 @@ exports.createOrder = async (req, res) => {
     const orderId = req.body.orderId;
     const aliUser = req.body.aliUser;
 
-    console.log(req.body);
-
     const alipayOrder = await alipay.createOrder(userId, accountId, orderId, aliUser);
     return res.send(alipayOrder);
-    // let type;
-    // let amount;
-    // if (orderType === 'week') { type = 2; }
-    // else if (orderType === 'month') { type = 3; }
-    // else if (orderType === 'day') { type = 4; }
-    // else if (orderType === 'hour') { type = 5; }
-    // else if (orderType === 'season') { type = 6; }
-    // else if (orderType === 'year') { type = 7; }
-    // else { return res.status(403).end(); }
-    // knex('webguiSetting').select().where({
-    //   key: 'payment',
-    // }).then(success => {
-    //   if (!success.length) {
-    //     return Promise.reject('settings not found');
-    //   }
-    //   success[0].value = JSON.parse(success[0].value);
-    //   return success[0].value;
-    // }).then(success => {
-    //   amount = success[orderType].alipay;
-    //   return alipay.createOrder(userId, accountId, amount, type);
-    // }).then(success => {
-    //   return res.send(success);
-    // }).catch(err => {
-    //   console.log(err);
-    //   res.status(403).end();
-    // });
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
+
+exports.confirmOrder = async (req, res) => {
+  try {
+    const orderId = req.body.orderId;
+  
+    console.log(req.body);
+
+    const alipayOrder = await alipay.confirmOrder(orderId);
+    return res.send(alipayOrder);
   } catch(err) {
     console.log(err);
     res.status(403).end();

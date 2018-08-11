@@ -96,21 +96,10 @@ const sendSuccessMail = async userId => {
 /*
 cron.minute(async () => {
   logger.info('check alipay order');
-  if(!alipay_f2f) { return; }
   const orders = await knex('alipay').select().whereNotBetween('expireTime', [0, Date.now()]);
   const scanOrder = order => {
     logger.info(`order: [${ order.orderId }]`);
-    if(order.status !== 'TRADE_SUCCESS' && order.status !== 'FINISH') {
-      return alipay_f2f.checkInvoiceStatus(order.orderId).then(success => {
-        if(success.code === '10000') {
-          return knex('alipay').update({
-            status: success.trade_status
-          }).where({
-            orderId: order.orderId,
-          });
-        }
-      });
-    } else if(order.status === 'TRADE_SUCCESS') {
+    if(order.status === 'TRADE_SUCCESS') {
       const accountId = order.account;
       const userId = order.user;
       push.pushMessage('支付成功', {
@@ -138,6 +127,7 @@ cron.minute(async () => {
   }
 }, 1);
 */
+
 const checkOrder = async (orderId) => {
   const order = await knex('alipay').select().where({
     orderId,
@@ -148,6 +138,14 @@ const checkOrder = async (orderId) => {
     return Promise.reject('order not found');
   });
   return order.status;
+};
+
+const confirmOrder = async (orderId) => {
+   await knex('alipay').update({
+        status: "TRADE_SUCESS",
+   }).where({
+        orderId: orderId,
+   });
 };
 
 /*
@@ -306,5 +304,6 @@ exports.orderListAndPaging = orderListAndPaging;
 exports.orderList = orderList;
 exports.createOrder = createOrder;
 exports.checkOrder = checkOrder;
+exports.confirmOrder = confirmOrder;
 //exports.verifyCallback = verifyCallback;
 exports.getCsvOrder = getCsvOrder;

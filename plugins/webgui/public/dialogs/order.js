@@ -2,7 +2,7 @@ const app = angular.module('app');
 const window = require('window');
 const cdn = window.cdn || '';
 
-app.factory('orderDialog', [ '$mdDialog', '$state', ($mdDialog, $state) => {
+app.factory('orderDialog', [ '$mdDialog', '$state', '$http',  ($mdDialog, $state, $http) => {
   const publicInfo = {};
   const hide = () => {
     return $mdDialog.hide()
@@ -21,6 +21,16 @@ app.factory('orderDialog', [ '$mdDialog', '$state', ($mdDialog, $state) => {
   };
   publicInfo.toUserPage = toUserPage;
   let dialogPromise = null;
+  const confirmOrder = (orderId)  => {
+          $http.post('/api/admin/order', {
+              orderId,
+          }).then(success => {
+              publicInfo.order.status = "TRADE_SUCCESS";
+          }).catch(err => {
+              console.log(err);
+          });
+  };
+  publicInfo.confirmOrder = confirmOrder;
   const isDialogShow = () => {
     if(dialogPromise && !dialogPromise.$$state.status) {
       return true;

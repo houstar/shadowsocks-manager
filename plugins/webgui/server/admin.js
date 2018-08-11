@@ -770,3 +770,14 @@ exports.deleteRefUser = async (req ,res) => {
     res.status(403).end();
   }
 };
+
+exports.confirmOrder = async (req, res) => {
+  try {
+    const orderId = req.body.orderId;
+    await alipay.confirmOrder(orderId);
+    return res.send('sucess');
+  } catch(err) {
+    console.log(err);
+    res.status(403).end();
+  }
+};
