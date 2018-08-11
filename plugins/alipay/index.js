@@ -141,11 +141,39 @@ const checkOrder = async (orderId) => {
 };
 
 const confirmOrder = async (orderId) => {
-   await knex('alipay').update({
-        status: "TRADE_SUCESS",
-   }).where({
+     await knex('alipay').update({
+        status: "TRADE_SUCCESS",
+     }).where({
         orderId: orderId,
-   });
+     });
+     const order = await knex('alipay').where({
+        orderId: orderId,
+     }).then(success => {
+       return success[0];
+    });
+    logger.info(`order: [${ order.orderId }]`);
+    if(order.status === 'TRADE_SUCCESS') {
+      const accountId = order.account;
+      const userId = order.user;
+      push.pushMessage('支付成功', {
+        body: `订单[ ${ order.orderId } ][ ${ order.amount } ]支付成功`,
+      });
+      isTelegram && telegram.push(`订单[ ${ order.orderId } ][ ${ order.amount } ]支付成功`);
+      return account.setAccountLimit(userId, accountId, order.orderType)
+      .then(() => {
+        return knex('alipay').update({
+          status: 'FINISH',
+        }).where({
+          orderId: order.orderId,
+        });
+      }).then(() => {
+        logger.info(`订单支付成功: [${ order.orderId }][${ order.amount }][account: ${ accountId }]`);
+        ref.payWithRef(userId, order.orderType);
+        sendSuccessMail(userId);
+      }).catch(err => {
+        logger.error(`订单支付失败: [${ order.orderId }]`, err);
+      });
+    };
 };
 
 /*
