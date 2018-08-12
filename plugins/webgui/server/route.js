@@ -120,7 +120,7 @@ app.put('/api/admin/user/:userId(\\d+)/:accountId(\\d+)', isAdmin, admin.setUser
 app.delete('/api/admin/user/:userId(\\d+)', isAdmin, admin.deleteUser);
 app.delete('/api/admin/user/:userId(\\d+)/:accountId(\\d+)', isAdmin, admin.deleteUserAccount);
 app.get('/api/admin/user/:accountId(\\d+)/lastConnect', isAdmin, admin.getUserPortLastConnect);
-app.post('/api/admin/order', isAdmin, admin.confirmOrder);
+app.post('/api/admin/order/confirm', isAdmin, admin.confirmOrder);
 
 app.get('/api/admin/alipay', isAdmin, admin.getOrders);
 app.get('/api/admin/alipay/csv', isAdmin, isSuperAdmin, admin.getCsvOrders);

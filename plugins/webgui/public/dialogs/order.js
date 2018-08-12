@@ -22,7 +22,7 @@ app.factory('orderDialog', [ '$mdDialog', '$state', '$http',  ($mdDialog, $state
   publicInfo.toUserPage = toUserPage;
   let dialogPromise = null;
   const confirmOrder = (orderId)  => {
-          $http.post('/api/admin/order', {
+          $http.post('/api/admin/order/confirm', {
               orderId,
           }).then(success => {
               publicInfo.order.status = "TRADE_SUCCESS";
